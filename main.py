@@ -1,4 +1,5 @@
 # Explorar el tema de conceptos y turnos
+# Se sigue en test 7, aquí realmente destaca el "desplazador de texto"
 
 import pygame
 import pygame_widgets
