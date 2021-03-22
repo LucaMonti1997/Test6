@@ -1,5 +1,5 @@
 # Explorar el tema de conceptos y turnos
-# Se sigue en test 7, aquí realmente destaca el "desplazador de texto"
+# Continua en test7, aquí realmente destaca el "colocador de texto"
 
 import pygame
 import pygame_widgets
@@ -10,7 +10,7 @@ from Funciones import *
 
 # Creamos la ventana donde se muestra todo
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Test6')
+pygame.display.set_caption('Test7')
 
 
 # Mezcla las cartas
@@ -91,7 +91,8 @@ def botonHandler(tipo):
             bases[0].anim['resta hp_muro'].start()
     elif tipo == 3:
         for recurso in grupo_recursos1:
-            recurso.posicion = textbox_pos.getText()
+            recurso.posicion[0] = textbox_posX.getText()
+            recurso.posicion[1] = textbox_posY.getText()
 
 
 # Gestiona el uso de cartas
@@ -171,11 +172,12 @@ boton_damage_muro = pygame_widgets.Button(WIN, 250, 350, 125, 40, text='Dañar m
                                           onClickParams=[3])
 boton_shuffle = pygame_widgets.Button(WIN, 450, 325, 125, 40, text='Cartas nuevas', onClick=shuffle)
 
-textbox_pos = pygame_widgets.TextBox(WIN, 150, 125, 200, 25)
+textbox_posX = pygame_widgets.TextBox(WIN, 150, 100, 200, 25)
+textbox_posY = pygame_widgets.TextBox(WIN, 150, 125, 200, 25)
 sliderx = pygame_widgets.Slider(WIN, 250, 50, 200, 25, min=0, max=1, step=0.01)
 slidery = pygame_widgets.Slider(WIN, 250, 150, 200, 25, min=0, max=1, step=0.01)
 
-lWidgets = [boton_damage, boton_damage_muro, boton_shuffle, textbox_pos, sliderx, slidery]
+lWidgets = [boton_damage, boton_damage_muro, boton_shuffle, textbox_posX, textbox_posY, sliderx, slidery]
 
 
 def main():
@@ -196,8 +198,8 @@ def main():
         for boton in lWidgets:
             boton.listen(events)
         for recurso in grupo_recursos1:
-            recurso.offset_x = sliderx.getValue()
-            recurso.offset_y = slidery.getValue()
+            recurso.offset[0] = sliderx.getValue()
+            recurso.offset[1] = slidery.getValue()
         renderWindow()
     pygame.quit()
 

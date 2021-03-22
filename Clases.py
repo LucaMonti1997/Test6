@@ -342,9 +342,8 @@ class Carta(PlantillaCarta):
 
 class CartaRecurso(PlantillaCarta):
     # Atributos de prueba para offset textos
-    posicion = 'centro'
-    offset_x = 0
-    offset_y = 0
+    posicion = ['left', 'bot']
+    offset = [0, 0]
 
     def __init__(self, coord, dimen, color, link_icono, recurso):
         """
@@ -362,7 +361,7 @@ class CartaRecurso(PlantillaCarta):
         super().redraw(win)
         self.textos['espadas'].renderSelf()
         win.blit(self.textos['espadas'].texto,
-                 colocar(self, self.textos['espadas'], self.posicion, self.offset_x, self.offset_y))
+                 colocar(self, self.textos['espadas'], self.posicion, self.offset))
 
     # Cuelga objetos sobre este objeto, para poder ser usado a traves de este objeto
     # Por ejemplo colgar distintos tipos de animaciones
