@@ -254,6 +254,7 @@ class PlantillaCarta(pygame.sprite.Sprite):
         self._rect.center = coord
         self._link_icono = link_icono
         self.anim = {}  # Diccionario con objetos Animador
+        self.textos = {}  # Diccionario con objetos TextoColgado
 
     def get(self, attr):
         if attr == 'coord':
@@ -277,7 +278,6 @@ class PlantillaCarta(pygame.sprite.Sprite):
 
     # Actualiza graficamente el objeto
     def update(self, win):
-        self.animSelf()
         self.image = pygame.Surface(self._dimen)
         self.image.fill(self._color)
         self.rect = self.image.get_rect()
@@ -290,23 +290,6 @@ class PlantillaCarta(pygame.sprite.Sprite):
     # Actualiza graficamente el icono. Lo coloca en el centro del objeto
     def redraw(self, win):
         win.blit(self._icono, (self._coord[0] - self._dimen[0] / 2, self._coord[1] - self._dimen[1] / 2))
-
-    # Gestiona animaciones de forma pasiva y automatica
-    def animSelf(self):
-        if self.overed:
-            if not self.expanding:
-                self.expanding = True
-                self.shrinking = False
-                self.anim['encojer'].stop_thread = True
-                self.anim['expandir'].stop_thread = False
-                self.anim['expandir'].start()
-        else:
-            if self.expanding:
-                self.expanding = False
-                self.shrinking = True
-                self.anim['expandir'].stop_thread = True
-                self.anim['encojer'].stop_thread = False
-                self.anim['encojer'].start()
 
     # Cuelga objetos sobre este objeto, para poder ser usado a traves de este objeto
     # Por ejemplo colgar distintos tipos de animaciones
@@ -358,34 +341,56 @@ class Carta(PlantillaCarta):
 
 
 class CartaRecurso(PlantillaCarta):
-    recurso = 'nada'  # Objeto tipo Recurso
+    # Atributos de prueba para offset textos
+    posicion = 'centro'
+    offset_x = 0
+    offset_y = 0
 
-    def __init__(self, coord, dimen, color, link_icono):
+    def __init__(self, coord, dimen, color, link_icono, recurso):
         """
         :param coord: Lista. Coordenadas [x,y]
         :param dimen: Lista. Dimensiones [ancho,alto]
         :param color: Color de fondo
         :param link_icono: String. Ruta a la imagen del icono
+        :param recurso: Recurso. El recurso en que esta carta representa
         """
         super().__init__(coord, dimen, color, link_icono)
+        self.recurso = recurso
+
+    # Actualiza graficamente los iconos y textos del objeto
+    def redraw(self, win):
+        super().redraw(win)
+        self.textos['espadas'].renderSelf()
+        win.blit(self.textos['espadas'].texto,
+                 colocar(self, self.textos['espadas'], self.posicion, self.offset_x, self.offset_y))
 
     # Cuelga objetos sobre este objeto, para poder ser usado a traves de este objeto
     # Por ejemplo colgar distintos tipos de animaciones
     def loadObject(self, objeto):
         super().loadObject(objeto)
-        if type(objeto) == Recurso:
-            self.recurso = objeto
+        if type(objeto) == TextoColgado:
+            self.textos[objeto.id] = objeto
 
 
 # Texto extra de otros objetos. Titulos, descripciones, etc.
 # "Colgado" porque su posición será relativa al objeto del que se cuelgue
+# Hay que ampliar sus capacidades, de momento solo acepta numeros o solo texto
+# Y al acceder a self.valor no se sabe que tipo se saca.
+# Quizás conviene crear clases mas especificas
 class TextoColgado(object):
     texto = ''
 
-    def __init__(self, valor, font, color):
+    def __init__(self, valor, font, color, identificaor='nada'):
+        """
+        :param valor: Mixto. Lo que se muestra en el texto
+        :param font: Font. Font que usa el texto
+        :param color: Lista. Color del texto
+        :param identificaor: ID que identifica el tipo de texto que es
+        """
         self.valor = valor
         self.font = font
         self.color = color
+        self.id = identificaor
 
     def renderSelf(self):
         self.texto = self.font.render(str(self.valor), 1, self.color)
