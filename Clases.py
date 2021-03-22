@@ -231,42 +231,45 @@ class Torre(pygame.sprite.Sprite):
         win.blit(self.icono, self.rect)
 
 
-# Las cartas en si. Puedes hacer click en ellas y desaparecen tras usarse
-class Carta(pygame.sprite.Sprite):
-    overed = False  # Indica si está siendo sobrevolada por el raton
-    expanding = False  # Indica si la carta se está expandiendo
-    shrinking = False  # Indica si la carta se está encojiendo
-    anim = {}  # Diccionario con objetos Animador
+# Plantilla para carta, rectangulos y cosas por el estilo
+# Tendrán un icono, texto y posibles animaciones asociadas
+class PlantillaCarta(pygame.sprite.Sprite):
+    _overed = False  # Indica si está siendo sobrevolada por el raton
 
-    def __init__(self, coord, dimen, color, tipo, descr, link_icono):
+    def __init__(self, coord, dimen, color, link_icono):
         """
         :param coord: Lista. Coordenadas [x,y]
         :param dimen: Lista. Dimensiones [ancho,alto]
         :param color: Color de fondo
-        :param tipo: String. Tipo de carta. Identificador de algun tipo
-        :param descr: Objeto TextoColgado. Muestra el nombre de la carta
         :param link_icono: String. Ruta a la imagen del icono
         """
         super().__init__()
-        self.coord = coord
-        self.dimen = dimen
-        self.color = color
-        self.icono = pygame.image.load(link_icono)
-        self.link_icono = link_icono
-        self.image = pygame.Surface(dimen)
-        self.rect = self.image.get_rect()
-        self.rect.center = coord
-        self.link_icono = link_icono
-        self.descr = descr
-        self.tipo = tipo
-
-    def set(self, attr, value):
-        if attr == 'dimen':
-            self.dimen = value
+        self._coord = coord
+        self._dimen = dimen
+        self._color = color
+        self._icono = pygame.image.load(link_icono)
+        self._link_icono = link_icono
+        self._image = pygame.Surface(dimen)
+        self._rect = self._image.get_rect()
+        self._rect.center = coord
+        self._link_icono = link_icono
+        self.anim = {}  # Diccionario con objetos Animador
 
     def get(self, attr):
-        if attr == 'dimen':
-            return self.dimen
+        if attr == 'coord':
+            return self._coord
+        elif attr == 'dimen':
+            return self._dimen
+        elif attr == 'color':
+            return self._color
+
+    def set(self, attr, value):
+        if attr == 'coord':
+            self._coord = value
+        elif attr == 'dimen':
+            self._dimen = value
+        elif attr == 'color':
+            self._color = value
 
     # Detecta si el ratón está por encima del objeto
     def mouseOver(self, pos):
@@ -275,21 +278,18 @@ class Carta(pygame.sprite.Sprite):
     # Actualiza graficamente el objeto
     def update(self, win):
         self.animSelf()
-        self.image = pygame.Surface(self.dimen)
-        self.image.fill(self.color)
+        self.image = pygame.Surface(self._dimen)
+        self.image.fill(self._color)
         self.rect = self.image.get_rect()
-        self.rect.center = [self.coord[0], self.coord[1]]
-        self.icono = pygame.image.load(self.link_icono)
-        self.icono = pygame.transform.scale(self.icono, [int(self.dimen[0]), int(self.dimen[1])])
+        self.rect.center = [self._coord[0], self._coord[1]]
+        self._icono = pygame.image.load(self._link_icono)
+        self._icono = pygame.transform.scale(self._icono, [int(self._dimen[0]), int(self._dimen[1])])
 
-        self.overed = self.rect.collidepoint(pygame.mouse.get_pos())
+        self._overed = self.rect.collidepoint(pygame.mouse.get_pos())
 
-        # Actualiza graficamente los textos del objeto
-
+    # Actualiza graficamente el icono. Lo coloca en el centro del objeto
     def redraw(self, win):
-        win.blit(self.icono, (self.coord[0] - self.dimen[0] / 2, self.coord[1] - self.dimen[1] / 2))
-        self.descr.renderSelf()
-        win.blit(self.descr.texto, (self.coord[0] + self.dimen[0] / 8, self.coord[1] - self.dimen[1] / 5))
+        win.blit(self._icono, (self._coord[0] - self._dimen[0] / 2, self._coord[1] - self._dimen[1] / 2))
 
     # Gestiona animaciones de forma pasiva y automatica
     def animSelf(self):
@@ -315,8 +315,50 @@ class Carta(pygame.sprite.Sprite):
             self.anim[objeto.id] = objeto
 
 
-class CartaRecurso(pygame.sprite.Sprite):
-    anim = {}  # Diccionario con objetos Animador
+# Las cartas en si. Puedes hacer click en ellas y desaparecen tras usarse
+class Carta(PlantillaCarta):
+    expanding = True  # Indica si la carta se está expandiendo
+    shrinking = True  # Indica si la carta se está encojiendo
+
+    def __init__(self, coord, dimen, color, tipo, descr, link_icono):
+        """
+        :param coord: Lista. Coordenadas [x,y]
+        :param dimen: Lista. Dimensiones [ancho,alto]
+        :param color: Color de fondo
+        :param tipo: String. Tipo de carta. Identificador de algun tipo
+        :param descr: Objeto TextoColgado. Muestra el nombre de la carta
+        :param link_icono: String. Ruta a la imagen del icono
+        """
+        super().__init__(coord, dimen, color, link_icono)
+        self.descr = descr
+        self.tipo = tipo
+
+    # Actualiza graficamente los iconos y textos del objeto
+    def redraw(self, win):
+        super().redraw(win)
+        self.descr.renderSelf()
+        win.blit(self.descr.texto, (self._coord[0] + self._dimen[0] / 8, self._coord[1] - self._dimen[1] / 5))
+
+    # Gestiona animaciones de forma pasiva y automatica
+    def animSelf(self):
+        if self._overed:
+            if not self.expanding:
+                self.expanding = True
+                self.shrinking = False
+                self.anim['encojer'].stop_thread = True
+                self.anim['expandir'].stop_thread = False
+                self.anim['expandir'].start()
+        else:
+            if self.expanding:
+                self.expanding = False
+                self.shrinking = True
+                self.anim['expandir'].stop_thread = True
+                self.anim['encojer'].stop_thread = False
+                self.anim['encojer'].start()
+
+
+class CartaRecurso(PlantillaCarta):
+    recurso = 'nada'  # Objeto tipo Recurso
 
     def __init__(self, coord, dimen, color, link_icono):
         """
@@ -325,17 +367,14 @@ class CartaRecurso(pygame.sprite.Sprite):
         :param color: Color de fondo
         :param link_icono: String. Ruta a la imagen del icono
         """
-        super().__init__()
-        self._coord = coord
-        self._dimen = dimen
-        self._color = color
-        self._icono = pygame.image.load(link_icono)
-        self._link_icono = link_icono
-        self._image = pygame.Surface(dimen)
-        self._rect = self._image.get_rect()
-        self._rect.center = coord
+        super().__init__(coord, dimen, color, link_icono)
 
-    def get(self, attr):
+    # Cuelga objetos sobre este objeto, para poder ser usado a traves de este objeto
+    # Por ejemplo colgar distintos tipos de animaciones
+    def loadObject(self, objeto):
+        super().loadObject(objeto)
+        if type(objeto) == Recurso:
+            self.recurso = objeto
 
 
 # Texto extra de otros objetos. Titulos, descripciones, etc.
@@ -360,6 +399,33 @@ class Recurso(object):
         :param cantidad. Numero. Cantidad del recurso inicail y a lo largo de la partida
         :param generador. Numero. Cantidad de recurso que se genera por turno
         """
-        self.tipo = tipo
-        self.cantidad = cantidad
-        self.generador = generador
+        self._tipo = tipo
+        self._cantidad = cantidad
+        self._generador = generador
+
+    def get(self, attr):
+        """
+        :param attr: Tipo de atributo que se quiere acceder. Puede ser 'tipo','cantidad','generador'
+        """
+        if attr == 'tipo':
+            return self._tipo
+        elif attr == 'cantidad':
+            return self._cantidad
+        elif attr == '_generador':
+            return self._generador
+
+    def set(self, attr, value):
+        """
+        :param attr: Tipo de atributo que se quiere acceder. Puede ser 'tipo','cantidad','generador'
+        :param value: Valor que se queire asociar
+        """
+        if attr == 'tipo':
+            self._tipo = value
+        elif attr == 'cantidad':
+            self._cantidad = value
+        elif attr == 'generador':
+            self._generador = value
+
+    # Calcula el nuevo valor de cantidad
+    def reCalcula(self, value):
+        self._cantidad = clamp(self._cantidad + value)

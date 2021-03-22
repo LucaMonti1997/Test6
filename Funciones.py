@@ -1,3 +1,7 @@
+# Restringe un numero entre un minimo y un maximo
+def clamp(numero, minimo=0, maximo=100):
+    return max(min(numero, maximo), minimo)
+
 
 # CAJÓN DE FUNCIONES SIN UTILIZAR, PERO UTILES QUIZÁS
 # Rutina que busca todo los atributos de tipo Torre

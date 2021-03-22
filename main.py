@@ -9,7 +9,7 @@ from Funciones import *
 
 # Creamos la ventana donde se muestra todo
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Test4')
+pygame.display.set_caption('Test6')
 
 
 # Mezcla las cartas
@@ -41,6 +41,7 @@ def renderWindow():
     grupo_cartas.update(WIN)
     grupo_cartas.draw(WIN)
     for carta in grupo_cartas:
+        carta.update(WIN)
         carta.redraw(WIN)
 
     # Mostramos las bases y torres
@@ -58,11 +59,6 @@ def renderWindow():
 
     # Se actualiza la ventana
     pygame.display.update()
-
-
-# Restringe un numero entre un minimo y un maximo
-def clamp(numero, minimo=0, maximo=100):
-    return max(min(numero, maximo), minimo)
 
 
 # Gestiona la posición del raton respecto a otras entidades
@@ -118,7 +114,7 @@ def generaCastillos():
         else:
             grupo_base2.add(torrel, torrer, torrec, muralla)
 
-        base = Base(125 + i * (WIDTH - 250), 150, 1, 1, torrel, torrer, torrec, muralla, hp, hp_texto, hp_muro,
+        base = Base(225 + i * (WIDTH - 450), 150, 1, 1, torrel, torrer, torrec, muralla, hp, hp_texto, hp_muro,
                     hp_muro_texto)
         bases.append(base)
         anim_base1 = Animador(bases[i], 1.2, ['hp', bases[i].get('hp') - 5], 'resta hp')
